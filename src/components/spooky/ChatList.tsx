@@ -1,17 +1,31 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/ui/icon';
 import { Chat } from './MessengerInterface';
 
 type ChatListProps = {
   chats: Chat[];
   onSelectChat: (chat: Chat) => void;
   selectedChat: Chat | null;
+  showCreateButton?: boolean;
+  onCreateClick?: () => void;
 };
 
-const ChatList = ({ chats, onSelectChat, selectedChat }: ChatListProps) => {
+const ChatList = ({ chats, onSelectChat, selectedChat, showCreateButton, onCreateClick }: ChatListProps) => {
   return (
     <ScrollArea className="h-full">
       <div className="p-2 space-y-1">
+        {showCreateButton && (
+          <Button
+            onClick={onCreateClick}
+            className="w-full mb-2 bg-primary hover:bg-primary/90"
+            size="sm"
+          >
+            <Icon name="Plus" size={16} className="mr-2" />
+            Создать группу
+          </Button>
+        )}
         {chats.map((chat) => (
           <button
             key={chat.id}

@@ -2,10 +2,17 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import Icon from '@/components/ui/icon';
 import { Chat, Message } from './MessengerInterface';
 import { User } from '@/pages/Index';
 import UserEditPanel from './UserEditPanel';
+import GroupInfoPanel from './GroupInfoPanel';
 
 type ChatWindowProps = {
   chat: Chat | null;
@@ -17,6 +24,7 @@ type ChatWindowProps = {
 
 const ChatWindow = ({ chat, currentUser, theme, editingUser, onCloseEdit }: ChatWindowProps) => {
   const [message, setMessage] = useState('');
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -64,6 +72,17 @@ const ChatWindow = ({ chat, currentUser, theme, editingUser, onCloseEdit }: Chat
     );
   }
 
+  if (showGroupInfo && chat?.isGroup) {
+    return (
+      <GroupInfoPanel
+        chat={chat}
+        currentUser={currentUser}
+        theme={theme}
+        onClose={() => setShowGroupInfo(false)}
+      />
+    );
+  }
+
   if (!chat) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -86,21 +105,63 @@ const ChatWindow = ({ chat, currentUser, theme, editingUser, onCloseEdit }: Chat
             )}
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">{chat.name}</h2>
-            <p className="text-xs text-muted-foreground">в сети</p>
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              {chat.name}
+              {chat.isGroup && (
+                <span className="text-xs text-muted-foreground font-normal">
+                  ({chat.members?.length || 0} участников)
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {chat.isGroup ? chat.description || 'Групповой чат' : 'в сети'}
+            </p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Icon name="Phone" size={20} />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Icon name="Video" size={20} />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Icon name="MoreVertical" size={20} />
-          </Button>
+          {!chat.isGroup && (
+            <>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Icon name="Phone" size={20} />
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Icon name="Video" size={20} />
+              </Button>
+            </>
+          )}
+          {chat.isGroup ? (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+              onClick={() => setShowGroupInfo(true)}
+            >
+              <Icon name="Info" size={20} />
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Icon name="MoreVertical" size={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="glass-effect">
+                <DropdownMenuItem>
+                  <Icon name="User" size={16} className="mr-2" />
+                  Профиль
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Icon name="Bell" size={16} className="mr-2" />
+                  Уведомления
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">
+                  <Icon name="Trash" size={16} className="mr-2" />
+                  Удалить чат
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

@@ -5,10 +5,19 @@ import ChatWindow from './ChatWindow';
 import ProfilePanel from './ProfilePanel';
 import AdminPanel from './AdminPanel';
 import ThemeSelector from './ThemeSelector';
+import CreateGroupDialog from './CreateGroupDialog';
 
 type MessengerInterfaceProps = {
   currentUser: User;
   onLogout: () => void;
+};
+
+export type GroupMember = {
+  userId: string;
+  name: string;
+  role: 'owner' | 'admin' | 'moderator' | 'member';
+  avatar: string;
+  isPremium?: boolean;
 };
 
 export type Chat = {
@@ -19,6 +28,9 @@ export type Chat = {
   unread: number;
   avatar: string;
   isPremium?: boolean;
+  isGroup?: boolean;
+  members?: GroupMember[];
+  description?: string;
 };
 
 export type Message = {
@@ -30,9 +42,10 @@ export type Message = {
 
 const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) => {
   const [theme, setTheme] = useState<'glass' | 'matte' | 'solid'>('glass');
-  const [activePanel, setActivePanel] = useState<'chats' | 'profile' | 'admin'>('chats');
+  const [activePanel, setActivePanel] = useState<'chats' | 'groups' | 'profile' | 'admin'>('chats');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   const mockChats: Chat[] = [
     {
@@ -63,6 +76,55 @@ const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) 
     },
   ];
 
+  const mockGroups: Chat[] = [
+    {
+      id: 'g1',
+      name: 'Призрачная команда',
+      lastMessage: 'Иван: Встреча перенесена на завтра',
+      timestamp: '15:20',
+      unread: 5,
+      avatar: '👥',
+      isGroup: true,
+      description: 'Рабочая группа проекта',
+      members: [
+        { userId: '1', name: 'Мария Привидова', role: 'owner', avatar: '👻', isPremium: true },
+        { userId: '2', name: 'Иван Духов', role: 'admin', avatar: '🎃' },
+        { userId: '3', name: 'Елена Тенькова', role: 'moderator', avatar: '💀', isPremium: true },
+        { userId: '4', name: 'Петр Призраков', role: 'member', avatar: '🦇' },
+        { userId: '5', name: 'Анна Ночная', role: 'member', avatar: '🌙' },
+      ],
+    },
+    {
+      id: 'g2',
+      name: 'Spooky Premium клуб',
+      lastMessage: 'Анна: Новые стикеры уже доступны!',
+      timestamp: '12:45',
+      unread: 0,
+      avatar: '👑',
+      isGroup: true,
+      description: 'Эксклюзивный чат для Premium пользователей',
+      members: [
+        { userId: '1', name: 'Мария Привидова', role: 'owner', avatar: '👻', isPremium: true },
+        { userId: '3', name: 'Елена Тенькова', role: 'member', avatar: '💀', isPremium: true },
+        { userId: '5', name: 'Анна Ночная', role: 'member', avatar: '🌙', isPremium: true },
+      ],
+    },
+    {
+      id: 'g3',
+      name: 'Общий чат',
+      lastMessage: 'Система: Добро пожаловать в Spooky!',
+      timestamp: '10:00',
+      unread: 0,
+      avatar: '🌐',
+      isGroup: true,
+      description: 'Открытый чат для всех пользователей',
+      members: [
+        { userId: '1', name: 'Мария Привидова', role: 'admin', avatar: '👻', isPremium: true },
+        { userId: '2', name: 'Иван Духов', role: 'moderator', avatar: '🎃' },
+      ],
+    },
+  ];
+
   return (
     <div className={`min-h-screen ${theme} transition-all duration-300`}>
       <div className="flex h-screen">
@@ -88,6 +150,16 @@ const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) 
               }`}
             >
               Чаты
+            </button>
+            <button
+              onClick={() => setActivePanel('groups')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                activePanel === 'groups'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Группы
             </button>
             <button
               onClick={() => setActivePanel('profile')}
@@ -117,6 +189,15 @@ const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) 
             {activePanel === 'chats' && (
               <ChatList chats={mockChats} onSelectChat={setSelectedChat} selectedChat={selectedChat} />
             )}
+            {activePanel === 'groups' && (
+              <ChatList 
+                chats={mockGroups} 
+                onSelectChat={setSelectedChat} 
+                selectedChat={selectedChat}
+                showCreateButton
+                onCreateClick={() => setShowCreateGroup(true)}
+              />
+            )}
             {activePanel === 'profile' && (
               <ProfilePanel user={currentUser} onLogout={onLogout} />
             )}
@@ -135,6 +216,14 @@ const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) 
             onCloseEdit={() => setEditingUser(null)}
           />
         </div>
+      </div>
+
+      <CreateGroupDialog 
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        currentUser={currentUser}
+        theme={theme}
+      />
       </div>
     </div>
   );
