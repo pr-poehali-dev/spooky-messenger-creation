@@ -224,7 +224,6 @@ const MessengerInterface = ({ currentUser, onLogout }: MessengerInterfaceProps) 
         currentUser={currentUser}
         theme={theme}
       />
-      </div>
     </div>
   );
 };
